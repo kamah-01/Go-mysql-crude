@@ -1,36 +1,32 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
-	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	uri := "mongodb://localhost:27017"
-	appCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	fmt.Println("Go mysql tuitorial")
 
-	client, connectErr := mongo.Connect(appCtx, options.Client().ApplyURI(uri))
-	if connectErr != nil {
-		panic(connectErr)
+	db, err := sql.Open("mysql", "root:39063612@tcp(127.0.0.1:3306)/testdb")
+
+	if err != nil {
+		panic(err.Error())
 	}
 
-	pingErr := client.Ping(appCtx, readpref.Primary())
-	if pingErr != nil {
-		panic(pingErr)
+	defer db.Close()
+
+	//fmt.Println("Successfully Connected to Mysql database")
+	insert, err := db.Query("INSERT INTO users (name, email) VALUES(?, ?)", "ELLIOT", "elliot@gmail.com")
+
+	if err != nil {
+		panic(err.Error())
 	}
-	fmt.Println("Application connected to mongodb successfully!")
 
-	defer cancel()
+	defer insert.Close()
 
-	defer func() {
-		disconnectErr := client.Disconnect(appCtx)
-		if disconnectErr != nil {
-			panic(disconnectErr)
-		}
-	}()
+	fmt.Println("Successfully inserted into user tables")
+
 }
