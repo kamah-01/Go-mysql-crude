@@ -1,32 +1,50 @@
 package main
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
+type Article struct {
+	Title   string `json:"Title"`
+	Desc    string `json:"desc"`
+	Content string `json:"content"`
+}
+
+type Articles []Article
+
+func allArticles(w http.ResponseWriter, r *http.Request) {
+	articles := Articles{
+		Article{Title: "Test Title", Desc: "Test Description", Content: "Hello World"},
+	}
+
+	fmt.Println("Endpoint Hit: All Article Endpoint")
+	json.NewEncoder(w).Encode(articles)
+}
+
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Homepage Endpoint Hit")
+
+}
+
+func testPostArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Test POST endpoint worked")
+
+}
+
+func handleRequests() {
+
+	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/articles", allArticles).Methods("GET")
+	myRouter.HandleFunc("/articles", testPostArticles).Methods("POST")
+	log.Fatal(http.ListenAndServe(":8081", myRouter))
+}
+
 func main() {
-	fmt.Println("Go mysql tuitorial")
-
-	db, err := sql.Open("mysql", "root:39063612@tcp(127.0.0.1:3306)/testdb")
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer db.Close()
-
-	//fmt.Println("Successfully Connected to Mysql database")
-	insert, err := db.Query("INSERT INTO users (name, email) VALUES(?, ?)", "ELLIOT", "elliot@gmail.com")
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer insert.Close()
-
-	fmt.Println("Successfully inserted into user tables")
-
+	handleRequests()
 }
